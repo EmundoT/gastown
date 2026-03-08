@@ -168,9 +168,9 @@ func OpenDB(host string, port int, dbName string, readTimeout, writeTimeout time
 //
 // Usage:
 //
-//	join, where := parentExcludeJoin(dbName)
-//	query := fmt.Sprintf("SELECT ... FROM wisps w %s WHERE ... AND %s", dbName, join, where)
-func parentExcludeJoin(dbName string) (joinClause, whereCondition string) {
+//	join, where := parentExcludeJoin()
+//	query := fmt.Sprintf("SELECT ... FROM wisps w %s WHERE ... AND %s", join, where)
+func parentExcludeJoin() (joinClause, whereCondition string) {
 	joinClause = `LEFT JOIN (
 		SELECT DISTINCT wd.issue_id
 		FROM wisp_dependencies wd
@@ -206,7 +206,7 @@ func Scan(db *sql.DB, dbName string, maxAge, purgeAge, mailDeleteAge, staleIssue
 
 	result := &ScanResult{Database: dbName}
 	now := time.Now().UTC()
-	parentJoin, parentWhere := parentExcludeJoin(dbName)
+	parentJoin, parentWhere := parentExcludeJoin()
 
 	// Count reap candidates: open wisps past max_age with eligible parent status.
 	// Uses LEFT JOIN anti-pattern instead of correlated EXISTS to avoid O(n*m) cost (gt-jd1z).
@@ -284,7 +284,7 @@ func Reap(db *sql.DB, dbName string, maxAge time.Duration, dryRun bool) (*ReapRe
 	defer cancel()
 
 	cutoff := time.Now().UTC().Add(-maxAge)
-	parentJoin, parentWhere := parentExcludeJoin(dbName)
+	parentJoin, parentWhere := parentExcludeJoin()
 	whereClause := fmt.Sprintf(
 		"w.status IN ('open', 'hooked', 'in_progress') AND w.created_at < ? AND %s", parentWhere)
 

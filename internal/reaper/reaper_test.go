@@ -51,15 +51,11 @@ func TestFormatJSON(t *testing.T) {
 }
 
 func TestParentExcludeJoin(t *testing.T) {
-	joinClause, whereCondition := parentExcludeJoin("testdb")
+	joinClause, whereCondition := parentExcludeJoin()
 
-	// JOIN clause should reference the correct database.
 	if joinClause == "" {
 		t.Error("parentExcludeJoin joinClause should not be empty")
 	}
-	// parentExcludeJoin no longer qualifies table names with the database — the
-	// reaper connects to a specific database via the DSN, so unqualified names
-	// are correct. The dbName parameter is retained for API compatibility.
 
 	// JOIN should select wisps with open parents from wisp_dependencies.
 	if !contains(joinClause, "wisp_dependencies") {
@@ -87,8 +83,7 @@ func TestParentExcludeJoin(t *testing.T) {
 // positional shift: "FROM wisps w gt WHERE..." instead of "FROM wisps w LEFT JOIN...".
 func TestReapQueryNoDatabaseNameInjection(t *testing.T) {
 	// Reproduce the exact Sprintf call from Reap() to verify no dbName injection.
-	dbName := "gt"
-	parentJoin, parentWhere := parentExcludeJoin(dbName)
+	parentJoin, parentWhere := parentExcludeJoin()
 	whereClause := fmt.Sprintf(
 		"w.status IN ('open', 'hooked', 'in_progress') AND w.created_at < ? AND %s", parentWhere)
 

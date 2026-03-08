@@ -165,7 +165,11 @@ func (d *Daemon) reapWispsInline(config *WispReaperConfig, maxAge, deleteAge tim
 			reapErrors++
 			continue
 		}
-		if ok, _ := reaper.HasReaperSchema(db); !ok {
+		if ok, schemaErr := reaper.HasReaperSchema(db); schemaErr != nil {
+			d.logger.Printf("wisp_reaper: %s: schema check error: %v", dbName, schemaErr)
+			db.Close()
+			continue
+		} else if !ok {
 			d.logger.Printf("wisp_reaper: %s: skipped (no reaper schema)", dbName)
 			db.Close()
 			continue
@@ -200,7 +204,11 @@ func (d *Daemon) reapWispsInline(config *WispReaperConfig, maxAge, deleteAge tim
 			purgeErrors++
 			continue
 		}
-		if ok, _ := reaper.HasReaperSchema(db); !ok {
+		if ok, schemaErr := reaper.HasReaperSchema(db); schemaErr != nil {
+			d.logger.Printf("wisp_reaper: %s: schema check error: %v", dbName, schemaErr)
+			db.Close()
+			continue
+		} else if !ok {
 			db.Close()
 			continue
 		}
@@ -236,7 +244,11 @@ func (d *Daemon) reapWispsInline(config *WispReaperConfig, maxAge, deleteAge tim
 		}
 		// Auto-close operates on the issues table, not wisps, but if the database
 		// has no beads schema at all we should skip it too.
-		if ok, _ := reaper.HasReaperSchema(db); !ok {
+		if ok, schemaErr := reaper.HasReaperSchema(db); schemaErr != nil {
+			d.logger.Printf("wisp_reaper: %s: schema check error: %v", dbName, schemaErr)
+			db.Close()
+			continue
+		} else if !ok {
 			db.Close()
 			continue
 		}
